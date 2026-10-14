@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -25,7 +25,8 @@ import { toast } from "@/lib/useToast";
 import ConfirmModal from "@/components/ConfirmModal";
 import type { Product } from "@/lib/types";
 
-export default function ProductDetailPage() {
+// İçerik component'i
+function ProductDetailContent() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -150,7 +151,6 @@ export default function ProductDetailPage() {
 
         {/* Sağ: Bilgi */}
         <div className="flex flex-col gap-5">
-          {/* Başlık */}
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span
@@ -270,7 +270,9 @@ export default function ProductDetailPage() {
               <InfoRow
                 icon={Palette}
                 label="Filament Kullanımı"
-                value={product.filamentUsed ? `${product.filamentUsed} g` : null}
+                value={
+                  product.filamentUsed ? `${product.filamentUsed} g` : null
+                }
               />
               <InfoRow
                 icon={Sparkles}
@@ -289,7 +291,9 @@ export default function ProductDetailPage() {
               <InfoRow
                 icon={Zap}
                 label="Yazıcı Gücü"
-                value={product.electricityKw ? `${product.electricityKw} kW` : null}
+                value={
+                  product.electricityKw ? `${product.electricityKw} kW` : null
+                }
               />
               <InfoRow
                 icon={Zap}
@@ -389,7 +393,6 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Modallar */}
       <ConfirmModal
         open={showArchive}
         title="Ürünü Arşivle"
@@ -412,6 +415,27 @@ export default function ProductDetailPage() {
         onCancel={() => setShowDelete(false)}
       />
     </div>
+  );
+}
+
+// Dış component (Suspense)
+export default function ProductDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-[60vh]">
+          <div
+            className="w-10 h-10 border-[3px] rounded-full animate-spin"
+            style={{
+              borderColor: "var(--border)",
+              borderTopColor: "var(--primary)",
+            }}
+          />
+        </div>
+      }
+    >
+      <ProductDetailContent />
+    </Suspense>
   );
 }
 
