@@ -18,6 +18,7 @@ import { fmt } from "@/lib/utils";
 import { COLORS } from "@/lib/theme";
 import type { Product, SaleStats } from "@/lib/types";
 
+
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState<SaleStats | null>(null);

@@ -1,22 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Save, ArrowLeft, Sparkles } from "lucide-react";
-import {
-  createProduct,
-  updateProduct,
-  getProduct,
-} from "@/lib/api";
-import {
-  fmt,
-  FILAMENTS,
-  FILAMENT_COLORS,
-} from "@/lib/utils";
+import { createProduct, updateProduct, getProduct } from "@/lib/api";
+import { fmt, FILAMENTS, FILAMENT_COLORS } from "@/lib/utils";
 import { toast } from "@/lib/useToast";
 import type { Product } from "@/lib/types";
 
-export default function AddProductPage() {
+// İçerik component'i
+function AddProductContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
@@ -61,7 +54,6 @@ export default function AddProductPage() {
 
   const str = (v: any) => (v === 0 || v ? String(v) : "");
 
-  // Otomatik hesaplama
   const used = parseFloat(filamentUsed) || 0;
   const fPrice = parseFloat(filamentPrice) || 0;
   const time = parseFloat(printTime) || 0;
@@ -128,7 +120,6 @@ export default function AddProductPage() {
 
   return (
     <div className="animate-fade-in max-w-3xl mx-auto flex flex-col gap-6">
-      {/* Üst bar */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
@@ -148,14 +139,11 @@ export default function AddProductPage() {
           {isEdit ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}
         </h1>
         <p className="text-[13px] mt-1" style={{ color: "var(--text-muted)" }}>
-          {isEdit
-            ? "Ürün bilgilerini güncelle"
-            : "Kataloğa yeni bir ürün ekle"}
+          {isEdit ? "Ürün bilgilerini güncelle" : "Kataloğa yeni bir ürün ekle"}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        {/* Temel bilgiler */}
         <div className="card flex flex-col gap-4">
           <h3 className="text-[15px] font-bold" style={{ color: "var(--text)" }}>
             📦 Temel Bilgiler
@@ -209,7 +197,6 @@ export default function AddProductPage() {
           </Field>
         </div>
 
-        {/* Filament */}
         <div className="card flex flex-col gap-4">
           <h3 className="text-[15px] font-bold" style={{ color: "var(--text)" }}>
             🧵 Filament Detayları
@@ -249,7 +236,6 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        {/* Baskı */}
         <div className="card flex flex-col gap-4">
           <h3 className="text-[15px] font-bold" style={{ color: "var(--text)" }}>
             ⚡ Baskı & Elektrik
@@ -290,11 +276,7 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        {/* Otomatik hesaplama */}
-        <div
-          className="card"
-          style={{ borderColor: "var(--primary)" + "66" }}
-        >
+        <div className="card" style={{ borderColor: "var(--primary)" + "66" }}>
           <h3
             className="text-[15px] font-bold mb-3 flex items-center gap-2"
             style={{ color: "var(--text)" }}
@@ -304,12 +286,12 @@ export default function AddProductPage() {
           </h3>
 
           <CalcRow label="Filament maliyeti" value={`${fmt(filamentCost, 2)} ₺`} />
-          <CalcRow label="Elektrik maliyeti" value={`${fmt(electricityCost, 2)} ₺`} />
-
-          <div
-            className="border-t my-3"
-            style={{ borderColor: "var(--border)" }}
+          <CalcRow
+            label="Elektrik maliyeti"
+            value={`${fmt(electricityCost, 2)} ₺`}
           />
+
+          <div className="border-t my-3" style={{ borderColor: "var(--border)" }} />
 
           <CalcRow label="Toplam Maliyet" value={`${fmt(cost, 2)} ₺`} bold />
           <CalcRow label="Satış Fiyatı" value={`${fmt(price, 2)} ₺`} />
@@ -322,7 +304,6 @@ export default function AddProductPage() {
           <CalcRow label="Marj" value={`%${fmt(margin, 1)}`} color={profitColor} />
         </div>
 
-        {/* Notlar */}
         <div className="card">
           <Field label="Notlar">
             <textarea
@@ -336,7 +317,6 @@ export default function AddProductPage() {
           </Field>
         </div>
 
-        {/* Kaydet */}
         <button
           type="submit"
           disabled={loading}
@@ -347,6 +327,27 @@ export default function AddProductPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+// Dış component (Suspense)
+export default function AddProductPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-[60vh]">
+          <div
+            className="w-10 h-10 border-[3px] rounded-full animate-spin"
+            style={{
+              borderColor: "var(--border)",
+              borderTopColor: "var(--primary)",
+            }}
+          />
+        </div>
+      }
+    >
+      <AddProductContent />
+    </Suspense>
   );
 }
 
