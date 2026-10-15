@@ -8,20 +8,19 @@ import {
   DollarSign,
   Package,
   Percent,
-  Boxes,
-  BarChart3,
+  AlertCircle,
 } from "lucide-react";
 import StatCard from "@/components/StatCard";
 import ChartCard from "@/components/ChartCard";
-import { getProducts, getSaleStats } from "@/lib/api";
+import { getProducts, getSaleStats, getExpenseStats } from "@/lib/api";
 import { fmt } from "@/lib/utils";
 import { COLORS } from "@/lib/theme";
-import type { Product, SaleStats } from "@/lib/types";
-
+import type { Product, SaleStats, ExpenseStats } from "@/lib/types";
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState<SaleStats | null>(null);
+  const [expenseStats, setExpenseStats] = useState<ExpenseStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,12 +29,14 @@ export default function HomePage() {
 
   const loadAll = async () => {
     try {
-      const [prodRes, statsRes] = await Promise.all([
+      const [prodRes, statsRes, expRes] = await Promise.all([
         getProducts(),
         getSaleStats(),
+        getExpenseStats(),
       ]);
       setProducts(prodRes.data || []);
       setStats(statsRes.data);
+      setExpenseStats(expRes.data);
     } catch (e) {
       console.error("Veri yükleme hatası:", e);
     } finally {
@@ -70,14 +71,20 @@ export default function HomePage() {
     count: 0,
   };
 
+  const totalExpense = expenseStats?.totals?.amount || 0;
+  const netProfit = totals.profit - totalExpense;
+  const netMargin =
+    totals.revenue > 0 ? ((netProfit / totals.revenue) * 100).toFixed(1) : "0";
   const profitMargin =
-    totals.revenue > 0 ? ((totals.profit / totals.revenue) * 100).toFixed(1) : "0";
-
-  const avgProfit =
-    totals.quantity > 0 ? totals.profit / totals.quantity : 0;
+    totals.revenue > 0
+      ? ((totals.profit / totals.revenue) * 100).toFixed(1)
+      : "0";
+  const avgProfit = totals.quantity > 0 ? totals.profit / totals.quantity : 0;
 
   const topProducts = (stats?.byQuantity || []).slice(0, 5);
   const maxQ = Math.max(...topProducts.map((p) => p.totalQuantity), 1);
+
+  const byCategory = expenseStats?.byCategory || [];
 
   return (
     <div className="animate-fade-in flex flex-col gap-6">
@@ -94,8 +101,8 @@ export default function HomePage() {
         </p>
       </div>
 
-      {/* Stat kartları */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stat kartları — 6 adet */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           icon={ShoppingCart}
           label="Toplam Satış"
@@ -109,10 +116,22 @@ export default function HomePage() {
           color={COLORS.success}
         />
         <StatCard
-          icon={TrendingUp}
-          label="Toplam Kâr"
-          value={`${fmt(totals.profit)} ₺`}
-          color={COLORS.profit}
+          icon={TrendingDown}
+          label="Toplam Gider"
+          value={`${fmt(totalExpense)} ₺`}
+          color={COLORS.danger}
+        />
+        <StatCard
+          icon={netProfit >= 0 ? TrendingUp : AlertCircle}
+          label="Net Kâr/Zarar"
+          value={`${netProfit >= 0 ? "+" : ""}${fmt(netProfit)} ₺`}
+          color={netProfit >= 0 ? COLORS.success : COLORS.danger}
+        />
+        <StatCard
+          icon={Percent}
+          label="Net Marj"
+          value={`%${netMargin}`}
+          color={netProfit >= 0 ? COLORS.success : COLORS.danger}
         />
         <StatCard
           icon={Package}
@@ -122,44 +141,102 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Finansal özet */}
+      {/* Finansal özet — 4 sütun */}
       <div className="card">
-        <h3 className="text-[15px] font-bold mb-4" style={{ color: "var(--text)" }}>
+        <h3
+          className="text-[15px] font-bold mb-4"
+          style={{ color: "var(--text)" }}
+        >
           💡 Finansal Özet
         </h3>
 
-        <div className="grid grid-cols-3 gap-4 mb-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
           <div>
-            <div className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
-              Toplam Maliyet
+            <div
+              className="text-[11px] font-semibold"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Satış Maliyeti
+            </div>
+            <div
+              className="text-[20px] font-extrabold mt-1"
+              style={{ color: COLORS.warning }}
+            >
+              {fmt(totals.cost)} ₺
+            </div>
+            <div
+              className="text-[11px] mt-0.5"
+              style={{ color: "var(--text-faint)" }}
+            >
+              KDV vs. hariç
+            </div>
+          </div>
+
+          <div>
+            <div
+              className="text-[11px] font-semibold"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Giderler
             </div>
             <div
               className="text-[20px] font-extrabold mt-1"
               style={{ color: COLORS.danger }}
             >
-              {fmt(totals.cost)} ₺
+              {fmt(totalExpense)} ₺
+            </div>
+            <div
+              className="text-[11px] mt-0.5"
+              style={{ color: "var(--text-faint)" }}
+            >
+              {expenseStats?.totals?.count || 0} kayıt
             </div>
           </div>
+
           <div>
-            <div className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
-              Ort. Kâr/Satış
+            <div
+              className="text-[11px] font-semibold"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Net Kâr
             </div>
             <div
               className="text-[20px] font-extrabold mt-1"
-              style={{ color: "var(--text)" }}
+              style={{
+                color: netProfit >= 0 ? COLORS.success : COLORS.danger,
+              }}
             >
-              {fmt(avgProfit, 1)} ₺
+              {netProfit >= 0 ? "+" : ""}
+              {fmt(netProfit)} ₺
+            </div>
+            <div
+              className="text-[11px] mt-0.5"
+              style={{ color: "var(--text-faint)" }}
+            >
+              Gelir − Gider
             </div>
           </div>
+
           <div>
-            <div className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
-              Kâr Marjı
+            <div
+              className="text-[11px] font-semibold"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Net Marj
             </div>
             <div
               className="text-[20px] font-extrabold mt-1"
-              style={{ color: COLORS.success }}
+              style={{
+                color: netProfit >= 0 ? COLORS.success : COLORS.danger,
+              }}
             >
-              %{profitMargin}
+              %{netMargin}
+            </div>
+            <div
+              className="text-[11px] mt-0.5"
+              style={{ color: "var(--text-faint)" }}
+            >
+              Brüt marj: %{profitMargin}
             </div>
           </div>
         </div>
@@ -173,14 +250,20 @@ export default function HomePage() {
             color={COLORS.success}
           />
           <ProgressRow
-            label="Maliyet"
+            label="Satış Maliyeti"
             value={totals.cost}
+            max={totals.revenue}
+            color={COLORS.warning}
+          />
+          <ProgressRow
+            label="Giderler"
+            value={totalExpense}
             max={totals.revenue}
             color={COLORS.danger}
           />
           <ProgressRow
-            label="Kâr"
-            value={totals.profit}
+            label="Net Kâr"
+            value={Math.max(netProfit, 0)}
             max={totals.revenue}
             color={COLORS.profit}
           />
@@ -190,33 +273,102 @@ export default function HomePage() {
       {/* Grafik */}
       <ChartCard daily={stats?.daily || []} monthly={stats?.monthly || []} />
 
-      {/* En çok satanlar */}
-      {topProducts.length > 0 && (
-        <div className="card">
-          <h3 className="text-[15px] font-bold mb-4" style={{ color: "var(--text)" }}>
-            🔥 En Çok Satanlar
-          </h3>
+      {/* En çok satanlar + Gider kategorileri yan yana */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* En çok satanlar */}
+        {topProducts.length > 0 && (
+          <div className="card">
+            <h3
+              className="text-[15px] font-bold mb-4"
+              style={{ color: "var(--text)" }}
+            >
+              🔥 En Çok Satanlar
+            </h3>
 
-          <div className="flex flex-col gap-4">
-            {topProducts.map((item, i) => {
-              const pct = (item.totalQuantity / maxQ) * 100;
-              const medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
-              return (
-                <div key={item.productId} className="flex items-center gap-3">
-                  <span className="text-[20px] w-7 text-center">{medals[i]}</span>
-                  <div className="flex-1 min-w-0">
+            <div className="flex flex-col gap-4">
+              {topProducts.map((item, i) => {
+                const pct = (item.totalQuantity / maxQ) * 100;
+                const medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
+                return (
+                  <div key={item.productId} className="flex items-center gap-3">
+                    <span className="text-[20px] w-7 text-center">
+                      {medals[i]}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span
+                          className="text-[13px] font-semibold truncate"
+                          style={{ color: "var(--text)" }}
+                        >
+                          {item.name}
+                        </span>
+                        <span
+                          className="text-[12px] font-bold ml-2 shrink-0"
+                          style={{ color: COLORS.info }}
+                        >
+                          {item.totalQuantity} adet
+                        </span>
+                      </div>
+                      <div
+                        className="h-1.5 rounded-full overflow-hidden"
+                        style={{ background: "var(--border)" }}
+                      >
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${pct}%`,
+                            background: COLORS.info,
+                          }}
+                        />
+                      </div>
+                      <div
+                        className="text-[11px] mt-1"
+                        style={{ color: "var(--text-faint)" }}
+                      >
+                        Gelir: {fmt(item.totalRevenue)} ₺ · Kâr:{" "}
+                        {fmt(item.totalProfit)} ₺
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Gider kategorileri */}
+        {byCategory.length > 0 && (
+          <div className="card">
+            <h3
+              className="text-[15px] font-bold mb-4"
+              style={{ color: "var(--text)" }}
+            >
+              💸 Gider Dağılımı
+            </h3>
+
+            <div className="flex flex-col gap-4">
+              {byCategory.map((cat, i) => {
+                const pct = (cat.amount / (totalExpense || 1)) * 100;
+                const colors = [
+                  COLORS.danger,
+                  COLORS.warning,
+                  COLORS.info,
+                  COLORS.profit,
+                  COLORS.success,
+                  "#64748b",
+                ];
+                const color = colors[i % colors.length];
+                return (
+                  <div key={cat.name}>
                     <div className="flex items-center justify-between mb-1.5">
                       <span
-                        className="text-[13px] font-semibold truncate"
+                        className="text-[13px] font-semibold"
                         style={{ color: "var(--text)" }}
                       >
-                        {item.name}
+                        {cat.name}
                       </span>
-                      <span
-                        className="text-[12px] font-bold ml-2 shrink-0"
-                        style={{ color: COLORS.info }}
-                      >
-                        {item.totalQuantity} adet
+                      <span className="text-[12px] font-bold" style={{ color }}>
+                        {fmt(cat.amount)} ₺
                       </span>
                     </div>
                     <div
@@ -225,25 +377,22 @@ export default function HomePage() {
                     >
                       <div
                         className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${pct}%`,
-                          background: COLORS.info,
-                        }}
+                        style={{ width: `${pct}%`, background: color }}
                       />
                     </div>
                     <div
                       className="text-[11px] mt-1"
                       style={{ color: "var(--text-faint)" }}
                     >
-                      Gelir: {fmt(item.totalRevenue)} ₺ · Kâr: {fmt(item.totalProfit)} ₺
+                      {cat.count} kayıt · %{fmt(pct, 1)}
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* İptal edilenler bilgisi */}
       {stats?.cancelled && stats.cancelled.count > 0 && (
@@ -258,10 +407,16 @@ export default function HomePage() {
             <span className="text-[18px]">🚫</span>
           </div>
           <div className="flex-1">
-            <div className="text-[14px] font-bold" style={{ color: "var(--text)" }}>
+            <div
+              className="text-[14px] font-bold"
+              style={{ color: "var(--text)" }}
+            >
               {stats.cancelled.count} iptal edilmiş satış
             </div>
-            <div className="text-[12px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+            <div
+              className="text-[12px] mt-0.5"
+              style={{ color: "var(--text-muted)" }}
+            >
               {fmt(stats.cancelled.revenue)} ₺ gelir istatistiklerden hariç
             </div>
           </div>
@@ -272,7 +427,10 @@ export default function HomePage() {
       {totals.count === 0 && (
         <div className="card flex flex-col items-center justify-center py-16 gap-3">
           <div style={{ fontSize: 56 }}>🖨️</div>
-          <div className="text-[18px] font-bold" style={{ color: "var(--text)" }}>
+          <div
+            className="text-[18px] font-bold"
+            style={{ color: "var(--text)" }}
+          >
             Henüz satış yok
           </div>
           <div className="text-[13px]" style={{ color: "var(--text-muted)" }}>
@@ -316,8 +474,6 @@ function ProgressRow({
           style={{ width: `${pct}%`, background: color }}
         />
       </div>
-
-
     </div>
   );
 }

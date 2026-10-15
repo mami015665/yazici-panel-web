@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,8 @@ const NAV_ITEMS = [
   { href: "/", label: "Panel", icon: LayoutDashboard },
   { href: "/products", label: "Katalog", icon: Package },
   { href: "/sales", label: "Satışlar", icon: Receipt },
+    { href: "/expenses", label: "Giderler", icon: TrendingDown },
+
   { href: "/archived", label: "Arşiv", icon: Archive },
 ];
 

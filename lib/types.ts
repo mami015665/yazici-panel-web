@@ -96,4 +96,29 @@ export interface SaleStats {
     revenue: number;
     profit: number;
   };
+
+  
+}
+
+// Gider
+export interface Expense {
+  _id: string;
+  name: string;
+  category: "Alet" | "Sarf Malzeme" | "Filament" | "Elektrik" | "Kargo" | "Diğer";
+  amount: number;
+  quantity: number;
+  date: string;
+  note?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExpenseStats {
+  totals: {
+    amount: number;
+    count: number;
+  };
+  byCategory: { name: string; amount: number; count: number }[];
+  monthly: { date: string; label: string; amount: number }[];
+  daily: { date: string; label: string; amount: number }[];
 }

@@ -30,6 +30,23 @@ export const archiveProduct = (id: string, archived = true) =>
   api.patch(`/products/${id}/archive`, { archived });
 export const getArchivedProducts = () => api.get("/products/archived/list");
 
+
+// ── GİDERLER ──
+export const getExpenses = (category?: string, limit?: number) =>
+  api.get("/expenses", {
+    params: {
+      ...(category && { category }),
+      ...(limit && { limit }),
+    },
+  });
+
+export const getExpenseStats = () => api.get("/expenses/stats");
+export const createExpense = (data: any) => api.post("/expenses", data);
+export const updateExpense = (id: string, data: any) =>
+  api.put(`/expenses/${id}`, data);
+export const deleteExpense = (id: string) => api.delete(`/expenses/${id}`);
+
+
 // ── SATIŞLAR ──
 export const getSales = (includeCancelled = false, limit?: number) =>
   api.get("/sales", {
@@ -44,5 +61,6 @@ export const createSale = (data: any) => api.post("/sales", data);
 export const deleteSale = (id: string) => api.delete(`/sales/${id}`);
 export const cancelSale = (id: string, cancel = true, reason = "") =>
   api.patch(`/sales/${id}/cancel`, { cancel, reason });
+
 
 export default api;
