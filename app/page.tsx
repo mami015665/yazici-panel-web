@@ -94,7 +94,7 @@ export default function HomePage() {
           className="text-[26px] font-extrabold tracking-tight"
           style={{ color: "var(--text)" }}
         >
-          Panel
+          3dprintlab
         </h1>
         <p className="text-[13px] mt-1" style={{ color: "var(--text-muted)" }}>
           {totals.quantity} adet satış · {products.length} ürün katalogda

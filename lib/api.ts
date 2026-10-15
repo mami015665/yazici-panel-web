@@ -46,7 +46,6 @@ export const updateExpense = (id: string, data: any) =>
   api.put(`/expenses/${id}`, data);
 export const deleteExpense = (id: string) => api.delete(`/expenses/${id}`);
 
-
 // ── SATIŞLAR ──
 export const getSales = (includeCancelled = false, limit?: number) =>
   api.get("/sales", {

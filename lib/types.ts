@@ -100,7 +100,6 @@ export interface SaleStats {
   
 }
 
-// Gider
 export interface Expense {
   _id: string;
   name: string;
