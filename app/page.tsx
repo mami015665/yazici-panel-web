@@ -94,7 +94,7 @@ export default function HomePage() {
           className="text-[26px] font-extrabold tracking-tight"
           style={{ color: "var(--text)" }}
         >
-          3dprintlab
+          Panel
         </h1>
         <p className="text-[13px] mt-1" style={{ color: "var(--text-muted)" }}>
           {totals.quantity} adet satış · {products.length} ürün katalogda
@@ -102,7 +102,7 @@ export default function HomePage() {
       </div>
 
       {/* Stat kartları — 6 adet */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           icon={ShoppingCart}
           label="Toplam Satış"
